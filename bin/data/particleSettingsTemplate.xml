@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<psystem>
+    <xdim>400</xdim>
+    <ydim>400</ydim>
+    <radius>4</radius>
+</psystem>
+<psystem>
+    <xdim>400</xdim>
+    <ydim>400</ydim>
+    <radius>6</radius>
+</psystem>
+<psystem>
+    <xdim>100</xdim>
+    <ydim>100</ydim>
+    <radius>8</radius>
+</psystem>

@@ -11,3 +11,7 @@ obj/
 .vs/
 *.vcxproj.filters
 *.vcxproj.user
+
+# Settings #
+/bin/data/colorSettings.xml
+bin/data/particleSettings.xml

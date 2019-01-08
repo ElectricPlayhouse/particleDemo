@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<scheme>
+    <bgcolor>
+        <r>0</r>
+        <g>0</g>
+        <b>0</b>
+        <a>255</a>
+    </bgcolor>
+    <color>
+        <r>255</r>
+        <g>0</g>
+        <b>0</b>
+        <a>255</a>
+    </color>
+    <color>
+        <r>0</r>
+        <g>255</g>
+        <b>0</b>
+        <a>255</a>
+    </color>
+    <color>
+        <r>0</r>
+        <g>0</g>
+        <b>255</b>
+        <a>255</a>
+    </color>
+</scheme>
