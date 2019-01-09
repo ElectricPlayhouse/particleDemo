@@ -49,6 +49,15 @@ void ofApp::setup(){
 	kinect.initBodySource();
 	k_xscale = w / KD_WIDTH;
 	k_yscale = h / KD_HEIGHT;
+	k_xoffset = 0.0f;
+	k_yoffset = -0.3 * h;
+
+	//*********************************
+	//	Osc
+	//*********************************
+	oscSend0.setup(HOST, PORT0);
+	oscSend1.setup(HOST, PORT1);
+	oscSend2.setup(HOST, PORT2);
 
 	//*********************************
 	//	Scene
@@ -77,7 +86,19 @@ void ofApp::update(){
 	if (t >= colorTime)
 	{
 		colorTime = t + (colorPeriod * ofRandom(0.9, 1.1));
+		resetColors();
 	}
+
+	//*********************************
+	//	Interaction Data
+	//*********************************
+	float xOrigin, yOrigin, xMin, yMin, xMax, yMax;
+	xOrigin = 0.5 * w;
+	yOrigin = 0.5 * h;
+	xMin = 0;
+	yMin = 0;
+	xMax = 0.5 * w;
+	yMax = 0.5 * h;
 
 	//*********************************
 	//	Kinect
@@ -85,20 +106,85 @@ void ofApp::update(){
 	kinect.update();
 	auto bodies = kinect.getBodySource()->getBodies();
 	
+	lHand = NULL;
+	rHand = NULL;
+
 	for(auto body : bodies)
 	{
 		if (body.joints.size() < 20)
+		{
 			continue;
+		}
 
 		auto leftHand = body.joints.at(JointType_HandLeft);
 		auto rightHand = body.joints.at(JointType_HandRight);
 
-		lHand = &ofPoint(leftHand.getPositionInDepthMap().x * k_xscale, leftHand.getPositionInDepthMap().y * k_yscale, 0);
-		rHand = &ofPoint(rightHand.getPositionInDepthMap().x * k_xscale, rightHand.getPositionInDepthMap().y * k_yscale, 0);
+		lHand = &ofPoint(leftHand.getPositionInDepthMap().x * k_xscale + k_xoffset, leftHand.getPositionInDepthMap().y * k_yscale + k_yoffset, 0);
+		rHand = &ofPoint(rightHand.getPositionInDepthMap().x * k_xscale + k_xoffset, rightHand.getPositionInDepthMap().y * k_yscale + k_yoffset, 0);
 
 		break;
 	}
 
+	//*********************************
+	//	Osc
+	//*********************************
+	if (lHand != NULL)
+	{
+		leftx = abs(lHand->x - xOrigin);
+		lefty = abs(lHand->y - yOrigin);
+	}
+	if (rHand != NULL)
+	{
+		rightx = abs(rHand->x - xOrigin);
+		righty = abs(rHand->y - yOrigin);
+	}
+
+	float dramaL = 0.5f;
+	float colorL = 0.5f;
+	float pmbL = 0.5f;
+
+	float cutoffR = 0.3;
+
+	if (lHand != NULL)
+	{
+		dramaL = ofMap(leftx, xMin, xMax, 0.0, 1.0, true);
+		colorL = ofMap(leftx, xMin, xMax, 0.5, 1.0, true);
+		pmbL = ofMap(leftx, xMin, xMax, 0.5, 0.65, true);
+	}
+	if (rHand != NULL)
+	{
+		cutoffR = ofMap(rightx, xMin, xMax, 0.2, 0.6, true);
+	}
+	else
+	{
+		
+	}
+
+	//***	Left hand
+	ofxOscMessage m;
+	m.setAddress("/dramaL");
+	m.addFloatArg(dramaL);
+	oscSend0.sendMessage(m);
+
+	m.clear();
+	m.setAddress("/colorL");
+	m.addFloatArg(colorL);
+
+	oscSend0.sendMessage(m);
+
+	m.clear();
+	m.setAddress("/pmbL");
+	m.addFloatArg(pmbL);
+
+	oscSend0.sendMessage(m);
+
+	//***	Right hand
+	m.clear();
+	m.setAddress("/cutoffR");
+	m.addFloatArg(cutoffR);
+
+	oscSend1.sendMessage(m);
+	
 	//*********************************
 	//	Particles
 	//*********************************
@@ -228,6 +314,21 @@ void ofApp::resetParticles() {
 }
 
 //--------------------------------------------------------------
+void ofApp::resetColors() {
+	activeScheme = ++activeScheme % int(colorSchemes.size());
+
+	int i = 0;
+	for (auto& particles : particleSystem)
+	{
+		int colorIndex = i % colorSchemes[activeScheme].numColors;
+		particles.bgColor = colorSchemes[activeScheme].bg_color;
+		particles.fgColor = colorSchemes[activeScheme].colors.at(colorIndex);
+		particles.initColorTexture();
+		++i;
+	}
+}
+
+//--------------------------------------------------------------
 void ofApp::reloadShaders() {
 	for (auto& particles : particleSystem)
 	{
@@ -240,6 +341,9 @@ void ofApp::keyPressed(int key){
 
 	switch (key)
 	{
+	case 'c':
+		resetColors();
+		break;
 	case 'r':
 		resetParticles();
 		break;

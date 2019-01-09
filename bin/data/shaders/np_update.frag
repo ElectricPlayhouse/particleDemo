@@ -63,8 +63,8 @@ void main()
     vel.xy = dir * speed;
 
     //  mass
-    float mass =  25.0 * col.b;
-	mass = clamp(mass, 5.0, 25.0);
+    float mass =  12.0 * col.r + 8.0 * col.g + 4.0 * col.b;
+	mass = clamp(mass, 8.0, 24.0);
 
     //  Attraction / repulsion
     vec3 direction = rightPos - pos.xyz;

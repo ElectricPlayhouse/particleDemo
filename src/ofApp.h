@@ -14,6 +14,11 @@
 #define KD_WIDTH 512.0
 #define KD_HEIGHT 424.0
 
+#define HOST "192.168.0.99"
+#define PORT0 10000
+#define PORT1 10001
+#define PORT2 10002
+
 class ofApp : public ofBaseApp{
 
 public:
@@ -24,6 +29,7 @@ public:
 
 	//	Behavoir
 	void resetParticles();
+	void resetColors();
 
 	//	UI
 	void reloadShaders();
@@ -52,11 +58,17 @@ public:
 	ofFbo fboOut;
 
 	//*********************************
+	//	Interaction Data
+	//*********************************
+	float xOrigin, yOrigin, xMin, yMin, xMax, yMax;
+
+	//*********************************
 	//	Kinect
 	//*********************************
 	ofxKFW2::Device kinect;
 	ofPoint *lHand, *rHand;
 	float k_xscale, k_yscale;
+	float k_xoffset, k_yoffset;
 
 	//*********************************
 	//	Noise particles
@@ -65,6 +77,14 @@ public:
 	vector<ColorScheme> colorSchemes;
 	int activeScheme;
 	int numSystems, numSchemes;
+
+	//*********************************
+	//	Osc
+	//*********************************
+	ofxOscSender oscSend0;
+	ofxOscSender oscSend1;
+	ofxOscSender oscSend2;
+	float leftx, lefty, rightx, righty;
 
 	//*********************************
 	//	Scene
