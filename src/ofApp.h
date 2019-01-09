@@ -11,6 +11,9 @@
 #include "ofxKinectForWindows2.h"
 #include "ofxOsc.h"
 
+#define KD_WIDTH 512.0
+#define KD_HEIGHT 424.0
+
 class ofApp : public ofBaseApp{
 
 public:
@@ -18,6 +21,12 @@ public:
 	void loadAppSettings();
 	void update();
 	void draw();
+
+	//	Behavoir
+	void resetParticles();
+
+	//	UI
+	void reloadShaders();
 
 	void keyPressed(int key);
 	void keyReleased(int key);
@@ -43,10 +52,23 @@ public:
 	ofFbo fboOut;
 
 	//*********************************
+	//	Kinect
+	//*********************************
+	ofxKFW2::Device kinect;
+	ofPoint *lHand, *rHand;
+	float k_xscale, k_yscale;
+
+	//*********************************
 	//	Noise particles
 	//*********************************
 	vector<NP_Particles> particleSystem;
 	vector<ColorScheme> colorSchemes;
 	int activeScheme;
 	int numSystems, numSchemes;
+
+	//*********************************
+	//	Scene
+	//*********************************
+	float resetTime, colorTime;
+	float resetPeriod, colorPeriod;
 };

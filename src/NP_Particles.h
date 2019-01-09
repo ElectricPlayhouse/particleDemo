@@ -34,6 +34,12 @@ public:
     void setup(unsigned int x_count, unsigned int y_count, ofPrimitiveMode primitive_mode = OF_PRIMITIVE_POINTS, unsigned int num_textures = 4);
     void update();
     void draw();
+	void resize();
+	void reset();
+	void reloadShaders();
+
+	//	Interaction
+	//void setInteractionPoints(ofPoint* leftPos, ofPoint* rightPos);
     
     //  Initialization
     void loadTexture(unsigned int index, float* texture);
@@ -50,6 +56,9 @@ public:
     //	Public Data
     float r;
 	ofColor bgColor;
+	ofColor fgColor;
+
+	ofPoint *leftPos, *rightPos;
 
 private:
     

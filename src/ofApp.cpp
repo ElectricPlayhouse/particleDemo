@@ -25,21 +25,39 @@ void ofApp::setup(){
 	//*********************************
 	activeScheme = 0;
 	int i = 0;
-	for (auto particles : particleSystem)
+	for (auto& particles : particleSystem)
 	{
 		int colorIndex = i % colorSchemes[activeScheme].numColors;
 		particles.bgColor = colorSchemes[activeScheme].bg_color;
-		particles.initColorTexture(colorSchemes[activeScheme].colors.at(colorIndex));
+		particles.fgColor = colorSchemes[activeScheme].colors.at(colorIndex);
+		particles.initColorTexture();
 		++i;
 	}
 
 	//*********************************
 	//	FBO Allocation
 	//*********************************
-	fboOut.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA32F_ARB);
+	fboOut.allocate(w, h, GL_RGBA32F_ARB);
 	fboOut.begin();
 	ofClear(255);
 	fboOut.end();
+
+	//*********************************
+	//	Kinect
+	//*********************************
+	kinect.open();
+	kinect.initBodySource();
+	k_xscale = w / KD_WIDTH;
+	k_yscale = h / KD_HEIGHT;
+
+	//*********************************
+	//	Scene
+	//********************************
+	resetPeriod = 20.0f;
+	colorPeriod = 90.0f;
+
+	resetTime = ofGetElapsedTimef() + resetPeriod;
+	colorTime = ofGetElapsedTimef() + colorPeriod;
 }
 
 //--------------------------------------------------------------
@@ -51,13 +69,50 @@ void ofApp::update(){
 	t = ofGetElapsedTimef();
 	f = ofGetFrameNum();
 
+	if (t >= resetTime)
+	{
+		resetTime = t + (resetPeriod * ofRandom(0.9, 1.1));
+		resetParticles();
+	}
+	if (t >= colorTime)
+	{
+		colorTime = t + (colorPeriod * ofRandom(0.9, 1.1));
+	}
+
+	//*********************************
+	//	Kinect
+	//*********************************
+	kinect.update();
+	auto bodies = kinect.getBodySource()->getBodies();
+	
+	for(auto body : bodies)
+	{
+		if (body.joints.size() < 20)
+			continue;
+
+		auto leftHand = body.joints.at(JointType_HandLeft);
+		auto rightHand = body.joints.at(JointType_HandRight);
+
+		lHand = &ofPoint(leftHand.getPositionInDepthMap().x * k_xscale, leftHand.getPositionInDepthMap().y * k_yscale, 0);
+		rHand = &ofPoint(rightHand.getPositionInDepthMap().x * k_xscale, rightHand.getPositionInDepthMap().y * k_yscale, 0);
+
+		break;
+	}
+
 	//*********************************
 	//	Particles
 	//*********************************
 	for (auto& particles : particleSystem)
 	{
+		particles.leftPos = lHand;
+		particles.rightPos = rHand;
 		particles.update();
 	}
+
+	//*********************************
+	//	Window
+	//*********************************
+	ofSetWindowTitle(ofToString(ofGetFrameRate()));
 }
 
 //--------------------------------------------------------------
@@ -88,6 +143,11 @@ void ofApp::draw(){
 	fboOut.end();
 
 	fboOut.draw(0, 0);
+
+	//*********************************
+	//	Kinect
+	//*********************************
+	kinect.getBodySource()->drawProjected(0, 0, w, h);
 }
 
 //--------------------------------------------------------------
@@ -134,10 +194,12 @@ void ofApp::loadAppSettings() {
 		ColorScheme scheme;
 
 		ofColor bgc;
-		bgc.r = cScheme.getChild("r").getFloatValue();
-		bgc.g = cScheme.getChild("g").getFloatValue();
-		bgc.b = cScheme.getChild("b").getFloatValue();
-		bgc.a = cScheme.getChild("a").getFloatValue();
+
+		auto bgcolor = cScheme.getChild("bgcolor");
+		bgc.r = bgcolor.getChild("r").getFloatValue();
+		bgc.g = bgcolor.getChild("g").getFloatValue();
+		bgc.b = bgcolor.getChild("b").getFloatValue();
+		bgc.a = bgcolor.getChild("a").getFloatValue();
 		scheme.setBgColor(bgc);
 
 		auto colors = cScheme.getChildren("color");
@@ -158,8 +220,35 @@ void ofApp::loadAppSettings() {
 }
 
 //--------------------------------------------------------------
+void ofApp::resetParticles() {
+	for (auto& particles : particleSystem)
+	{
+		particles.reset();
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::reloadShaders() {
+	for (auto& particles : particleSystem)
+	{
+		particles.reloadShaders();
+	}
+}
+
+//--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
+	switch (key)
+	{
+	case 'r':
+		resetParticles();
+		break;
+	case 'R':
+		reloadShaders();
+		break;
+	default:
+		break;
+	}
 }
 
 //--------------------------------------------------------------
@@ -200,6 +289,27 @@ void ofApp::mouseExited(int x, int y){
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
 
+	//*********************************
+	//  Data
+	//*********************************
+	this->w = w;
+	this->h = h;
+
+	//*********************************
+	//	Particles
+	//*********************************
+	for (auto& particles : particleSystem)
+	{
+		particles.resize();
+	}
+
+	//*********************************
+	//	FBO Allocation
+	//*********************************
+	fboOut.allocate(w, h, GL_RGBA32F_ARB);
+	fboOut.begin();
+	ofClear(255);
+	fboOut.end();
 }
 
 //--------------------------------------------------------------

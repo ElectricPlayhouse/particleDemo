@@ -49,11 +49,6 @@ void NP_Particles::setup(unsigned int x_count, unsigned int y_count, ofPrimitive
         fbos[i].allocate(s);
     }
     
-    //draw_fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA32F_ARB);
-    //draw_fbo.begin();
-    //ofClear(255);
-    //draw_fbo.end();
-    
     //  Particle mesh setup
     particle_mesh.clear();
     
@@ -113,13 +108,19 @@ void NP_Particles::update()
 	f = ofGetFrameNum();
 
     //  Interaction
-	targetPos.x = ofGetMouseX();
-	targetPos.y = ofGetMouseY();
+	if (leftPos != NULL && rightPos != NULL) {
+		targetPos.x = 0.5 * (leftPos->x + rightPos->x);
+		targetPos.y = 0.5 * (leftPos->y + rightPos->y);
+	}
+	else {
+		targetPos.x = w * ofNoise(0.01 * t);
+		targetPos.y = h * ofNoise(0.012 * t);
+	}
     
     currentPos += 0.002 * (targetPos - currentPos);
     
-    noise_scale = ofMap(currentPos.x, 0, ofGetWidth(), 200, 800, true);
-    noise_frequency = ofMap(currentPos.y, 0, ofGetHeight(), 1.0, 32.0, true);
+    noise_scale = ofMap(currentPos.x, 0, w, 200, 800, true);
+    noise_frequency = ofMap(currentPos.y, 0, h, 1.0, 32.0, true);
     
 	//	Particles update
     fbos[1 - current_fbo_index].begin(false);
@@ -134,11 +135,19 @@ void NP_Particles::update()
 
     update_shader.setUniform1f("elapsed", ofGetLastFrameTime());
     update_shader.setUniform1f("radiusSquared", 160000.0f);
-    update_shader.setUniform2f("resolution", ofVec2f(ofGetWidth(), ofGetHeight()));
-    
+    update_shader.setUniform2f("resolution", ofVec2f(w, h));
     update_shader.setUniform1f("noise_scale", noise_scale);
     update_shader.setUniform1f("noise_frequency", noise_frequency);
     
+	if (leftPos != NULL)
+		update_shader.setUniform3f("leftPos", *leftPos);
+	else
+		update_shader.setUniform3f("leftPos", 99999999, 99999999, 99999999);
+	if (rightPos != NULL)
+		update_shader.setUniform3f("rightPos", *rightPos);
+	else
+		update_shader.setUniform3f("rightPos", 99999999, 99999999, 99999999);
+
     for(unsigned i = 0; i < fbos[current_fbo_index].getNumTextures(); ++i)
     {
         ostringstream stream;
@@ -197,16 +206,13 @@ void NP_Particles::initPositionTexture()
 {
     float* pos_tex = new float[x_dim * y_dim * 4]; //4 for RGBA
     
-    float screen_w = ofGetWidth();
-    float screen_h = ofGetHeight();
-    
     for(unsigned int y = 0; y < y_dim; ++y)
     {
         for(unsigned int x = 0; x < x_dim; ++x)
         {
             unsigned int index = y * x_dim + x;
-            pos_tex[index * 4 + 0] = ofRandom(screen_w);
-            pos_tex[index * 4 + 1] = ofRandom(screen_h);
+            pos_tex[index * 4 + 0] = ofRandom(w);
+            pos_tex[index * 4 + 1] = ofRandom(h);
             pos_tex[index * 4 + 2] = 0.0f;
             pos_tex[index * 4 + 3] = 0.0f;
         }
@@ -238,12 +244,12 @@ void NP_Particles::initColorTexture()
         {
             unsigned index = y * x_dim + x;
             
-            float alpha  = ofMap(index, 0.0, x_dim * y_dim, 0.01, 0.5);
+			float alpha = ofMap(index, 0.0, x_dim * y_dim, 0.0, 1.0);
             
-            col_tex[index * 4 + 0] = 0.33 + 0.67 * float(y) / float(y_dim);
-            col_tex[index * 4 + 1] = 0.33 * float(y) / float(y_dim);
-            col_tex[index * 4 + 2] = 1.0f - 0.67 * float(x) / float(x_dim);
-            col_tex[index * 4 + 3] = alpha * alpha_factor;
+			col_tex[index * 4 + 0] = fgColor.r / 255.0;
+			col_tex[index * 4 + 1] = fgColor.g / 255.0;
+			col_tex[index * 4 + 2] = fgColor.b / 255.0;
+			col_tex[index * 4 + 3] = alpha * alpha_factor;
         }
     }
     
@@ -257,9 +263,6 @@ void NP_Particles::initColorTexture()
 void NP_Particles::initColorTexture(ofColor color)
 {
     float* col_tex = new float[x_dim * y_dim * 4]; //4 for RGBA
-    
-    float screen_w = ofGetWidth();
-    float screen_h = ofGetHeight();
     
     for(unsigned y = 0; y < y_dim; ++y)
     {
@@ -321,4 +324,36 @@ void NP_Particles::clearTexture(unsigned int index)
 void NP_Particles::setAlphaFactor(float factor)
 {
     alpha_factor = factor;
+}
+
+//--------------------------------------------------------------
+//void NP_Particles::setInteractionPoints(ofPoint* leftPos, ofPoint* rightPos)
+//{
+//	this->leftPos = leftPos;
+//	this->rightPos = rightPos;
+//}
+
+//--------------------------------------------------------------
+void NP_Particles::resize()
+{
+	//	Data
+	w = ofGetWidth();
+	h = ofGetHeight();
+}
+
+//--------------------------------------------------------------
+void NP_Particles::reset()
+{
+	targetPos = currentPos = ofPoint(ofRandom(w), ofRandom(h), 0);
+
+	initPositionTexture();
+	initVelocityTexture();
+	initColorTexture();
+}
+
+//--------------------------------------------------------------
+void NP_Particles::reloadShaders()
+{
+	update_shader.load("shaders/" + UPDATE_SHADER_NAME);
+	draw_shader.load("shaders/" + DRAW_SHADER_NAME);
 }
