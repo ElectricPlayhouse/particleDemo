@@ -21,7 +21,7 @@ void ofApp::setup(){
 	loadAppSettings();
 
 	//*********************************
-	//	Particles
+	//	Noise Particles
 	//*********************************
 	activeScheme = 0;
 	int i = 0;
@@ -33,6 +33,16 @@ void ofApp::setup(){
 		particles.initColorTexture();
 		++i;
 	}
+
+	//*********************************
+	//	Space Particles
+	//*********************************
+	sp_particles.setup(sp_x_dim, sp_y_dim);
+	sp_particles.r = 4.0;
+	sp_particles.bgColor = colorSchemes[activeScheme].bg_color;
+	sp_particles.fgColor1 = colorSchemes[activeScheme].colors.at(1);
+	sp_particles.fgColor2 = colorSchemes[activeScheme].colors.at(2);
+	sp_particles.initColorTexture();
 
 	//*********************************
 	//	FBO Allocation
@@ -67,6 +77,8 @@ void ofApp::setup(){
 
 	resetTime = ofGetElapsedTimef() + resetPeriod;
 	colorTime = ofGetElapsedTimef() + colorPeriod;
+
+	scene = SLOW_PARTICLES;
 }
 
 //--------------------------------------------------------------
@@ -196,13 +208,25 @@ void ofApp::update(){
 	oscSend1.sendMessage(m);
 	
 	//*********************************
-	//	Particles
+	//	Scene
 	//*********************************
-	for (auto& particles : particleSystem)
+	switch (scene)
 	{
-		particles.leftPos = lHand;
-		particles.rightPos = rHand;
-		particles.update();
+	case NOISE_PARTICLES:
+		for (auto& particles : particleSystem)
+		{
+			particles.leftPos = lHand;
+			particles.rightPos = rHand;
+			particles.update();
+		}
+		break;
+	case SLOW_PARTICLES:
+		sp_particles.leftPos = lHand;
+		sp_particles.rightPos = rHand;
+		sp_particles.update();
+		break;
+	default:
+		break;
 	}
 
 	//*********************************
@@ -226,12 +250,26 @@ void ofApp::draw(){
 
 	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 
-	ofSetColor(colorSchemes[activeScheme].bg_color, 8);
-	ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
-
-	for (auto& particles : particleSystem)
+	switch (scene)
 	{
-		particles.draw();
+	case NOISE_PARTICLES:
+		ofSetColor(colorSchemes[activeScheme].bg_color, 8);
+		ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+
+		for (auto& particles : particleSystem)
+		{
+			particles.draw();
+		}
+		break;
+	case SLOW_PARTICLES:
+		ofSetColor(colorSchemes[activeScheme].bg_color, 128);
+		ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+
+		sp_particles.draw();
+		break;
+	default:
+		break;
+
 	}
 
 	ofDisableBlendMode();
@@ -326,9 +364,19 @@ void ofApp::loadAppSettings() {
 
 //--------------------------------------------------------------
 void ofApp::resetParticles() {
-	for (auto& particles : particleSystem)
+	switch (scene)
 	{
-		particles.reset();
+	case NOISE_PARTICLES:
+		for (auto& particles : particleSystem)
+		{
+			particles.reset();
+		}
+		break;
+	case SLOW_PARTICLES:
+		sp_particles.reset();
+		break;
+	default:
+		break;
 	}
 }
 
@@ -337,14 +385,29 @@ void ofApp::resetColors() {
 	activeScheme = ++activeScheme % int(colorSchemes.size());
 
 	int i = 0;
-	for (auto& particles : particleSystem)
+
+	switch (scene)
 	{
-		int colorIndex = i % colorSchemes[activeScheme].numColors;
-		particles.bgColor = colorSchemes[activeScheme].bg_color;
-		particles.fgColor = colorSchemes[activeScheme].colors.at(colorIndex);
-		particles.initColorTexture();
-		++i;
+	case NOISE_PARTICLES:
+		for (auto& particles : particleSystem)
+		{
+			int colorIndex = i % colorSchemes[activeScheme].numColors;
+			particles.bgColor = colorSchemes[activeScheme].bg_color;
+			particles.fgColor = colorSchemes[activeScheme].colors.at(colorIndex);
+			particles.initColorTexture();
+			++i;
+		}
+		break;
+	case SLOW_PARTICLES:
+		sp_particles.bgColor = colorSchemes[activeScheme].bg_color;
+		sp_particles.fgColor1 = colorSchemes[activeScheme].colors.at(1);
+		sp_particles.fgColor2 = colorSchemes[activeScheme].colors.at(2);
+		sp_particles.initColorTexture();
+		break;
+	default:
+		break;
 	}
+
 }
 
 //--------------------------------------------------------------
@@ -353,6 +416,8 @@ void ofApp::reloadShaders() {
 	{
 		particles.reloadShaders();
 	}
+
+	sp_particles.reloadShaders();
 }
 
 //--------------------------------------------------------------

@@ -5,6 +5,7 @@
 //	Application
 #include "ColorScheme.h"
 #include "NP_Particles.h"
+#include "SP_Particles.h"
 
 //	Addons
 #include "ofxGLWarper.h"
@@ -74,9 +75,21 @@ public:
 	//	Noise particles
 	//*********************************
 	vector<NP_Particles> particleSystem;
+	int numSystems;
+
+	//*********************************
+	//	Space particles
+	//*********************************
+	SP_Particles sp_particles;
+	const int sp_x_dim = 2000;
+	const int sp_y_dim = 2000;
+
+	//*********************************
+	//	Colors
+	//*********************************
 	vector<ColorScheme> colorSchemes;
 	int activeScheme;
-	int numSystems, numSchemes;
+	int numSchemes;
 
 	//*********************************
 	//	Osc
@@ -91,4 +104,13 @@ public:
 	//*********************************
 	float resetTime, colorTime;
 	float resetPeriod, colorPeriod;
+
+	typedef enum
+	{
+		NOISE_PARTICLES = 0,
+		SLOW_PARTICLES = 1,
+		NUM_SCENES
+	} Scene;
+
+	Scene scene;
 };
