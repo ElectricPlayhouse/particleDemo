@@ -7,9 +7,9 @@ void ofApp::setup(){
 	//  OF Settings
 	//*********************************
 	ofSetFrameRate(60);
-	//ofSetFullscreen(true);
+	ofSetFullscreen(true);
 
-	//*********************************
+	//*********************************aa
 	//  Data
 	//*********************************
 	w = ofGetWidth();
@@ -50,7 +50,7 @@ void ofApp::setup(){
 	k_xscale = w / KD_WIDTH;
 	k_yscale = h / KD_HEIGHT;
 	k_xoffset = 0.0f;
-	k_yoffset = -0.3 * h;
+	k_yoffset = 0.0f;
 
 	//*********************************
 	//	Osc
@@ -61,9 +61,9 @@ void ofApp::setup(){
 
 	//*********************************
 	//	Scene
-	//********************************
-	resetPeriod = 20.0f;
-	colorPeriod = 90.0f;
+	//*********************************
+	resetPeriod = 15.0f;
+	colorPeriod = 60.0f;
 
 	resetTime = ofGetElapsedTimef() + resetPeriod;
 	colorTime = ofGetElapsedTimef() + colorPeriod;
@@ -86,6 +86,7 @@ void ofApp::update(){
 	if (t >= colorTime)
 	{
 		colorTime = t + (colorPeriod * ofRandom(0.9, 1.1));
+		resetTime = t + (resetPeriod * ofRandom(0.9, 1.1));
 		resetColors();
 	}
 
@@ -142,6 +143,7 @@ void ofApp::update(){
 	float dramaL = 0.5f;
 	float colorL = 0.5f;
 	float pmbL = 0.5f;
+	float cabinetMix = 0.0f;
 
 	float cutoffR = 0.3;
 
@@ -149,7 +151,9 @@ void ofApp::update(){
 	{
 		dramaL = ofMap(leftx, xMin, xMax, 0.0, 1.0, true);
 		colorL = ofMap(leftx, xMin, xMax, 0.5, 1.0, true);
-		pmbL = ofMap(leftx, xMin, xMax, 0.5, 0.65, true);
+		
+		pmbL = ofMap(lefty, xMin, xMax, 0.5, 0.7, true);
+		cabinetMix = ofMap(lefty, xMin, xMax, 0.0, 0.25);
 	}
 	if (rHand != NULL)
 	{
@@ -175,6 +179,12 @@ void ofApp::update(){
 	m.clear();
 	m.setAddress("/pmbL");
 	m.addFloatArg(pmbL);
+
+	oscSend0.sendMessage(m);
+
+	m.clear();
+	m.setAddress("/cabinetMix");
+	m.addFloatArg(cabinetMix);
 
 	oscSend0.sendMessage(m);
 
@@ -231,9 +241,18 @@ void ofApp::draw(){
 	fboOut.draw(0, 0);
 
 	//*********************************
+	//	Masking
+	//*********************************
+	ofPushStyle();
+	ofSetColor(0);
+	ofDrawRectangle(0, 0, 265, h);
+	ofDrawRectangle(1600, 0, 400, h);
+	ofPopStyle();
+
+	//*********************************
 	//	Kinect
 	//*********************************
-	kinect.getBodySource()->drawProjected(0, 0, w, h);
+	//kinect.getBodySource()->drawProjected(0, 0, w, h);
 }
 
 //--------------------------------------------------------------

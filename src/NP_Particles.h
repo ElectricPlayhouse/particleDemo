@@ -49,6 +49,9 @@ public:
     void initColorTexture(ofColor color);
     void initSpeedTexture();
     void clearTexture(unsigned int index);
+
+	float * initialPositionData;
+	float * initialVelocityData;
     
     //  Set functions
     void setAlphaFactor(float factor);

@@ -204,22 +204,21 @@ void NP_Particles::loadTexture(unsigned int index, float* texture)
 //--------------------------------------------------------------
 void NP_Particles::initPositionTexture()
 {
-    float* pos_tex = new float[x_dim * y_dim * 4]; //4 for RGBA
+	initialPositionData = new float[x_dim * y_dim * 4]; //4 for RGBA
     
     for(unsigned int y = 0; y < y_dim; ++y)
     {
         for(unsigned int x = 0; x < x_dim; ++x)
         {
             unsigned int index = y * x_dim + x;
-            pos_tex[index * 4 + 0] = ofRandom(w);
-            pos_tex[index * 4 + 1] = ofRandom(h);
-            pos_tex[index * 4 + 2] = 0.0f;
-            pos_tex[index * 4 + 3] = 0.0f;
+			initialPositionData[index * 4 + 0] = ofRandom(w);
+			initialPositionData[index * 4 + 1] = ofRandom(h);
+			initialPositionData[index * 4 + 2] = 0.0f;
+			initialPositionData[index * 4 + 3] = 0.0f;
         }
     }
     
-    loadTexture(POSITION, pos_tex);
-    delete[] pos_tex;
+    loadTexture(POSITION, initialPositionData);
     
     return;
 }
@@ -228,6 +227,8 @@ void NP_Particles::initPositionTexture()
 void NP_Particles::initVelocityTexture()
 {
     clearTexture(VELOCITY);
+	initialVelocityData = new float[x_dim * y_dim * 4];
+	memset(initialVelocityData, 0, sizeof(float) * x_dim * y_dim * 4);
 }
 
 //--------------------------------------------------------------
@@ -313,8 +314,9 @@ void NP_Particles::clearTexture(unsigned int index)
 {
     float* tex = new float[x_dim * y_dim * 4];
     memset(tex, 0, sizeof(float) * x_dim * y_dim * 4);
-    
+
     loadTexture(index, tex);
+
     delete[] tex;
     
     return;
@@ -346,8 +348,8 @@ void NP_Particles::reset()
 {
 	targetPos = currentPos = ofPoint(ofRandom(w), ofRandom(h), 0);
 
-	initPositionTexture();
-	initVelocityTexture();
+	loadTexture(POSITION, initialPositionData);
+	loadTexture(VELOCITY, initialVelocityData);
 	initColorTexture();
 }
 
