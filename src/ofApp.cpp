@@ -38,7 +38,7 @@ void ofApp::setup(){
 	//	Space Particles
 	//*********************************
 	sp_particles.setup(sp_x_dim, sp_y_dim);
-	sp_particles.r = 4.0;
+	sp_particles.r = 6.0;
 	sp_particles.bgColor = colorSchemes[activeScheme].bg_color;
 	sp_particles.fgColor1 = colorSchemes[activeScheme].colors.at(1);
 	sp_particles.fgColor2 = colorSchemes[activeScheme].colors.at(2);
@@ -72,11 +72,13 @@ void ofApp::setup(){
 	//*********************************
 	//	Scene
 	//*********************************
-	resetPeriod = 15.0f;
-	colorPeriod = 60.0f;
+	resetPeriod = 20.0f;
+	colorPeriod = 20.0f;
+	scenePeriod = 60.0f;
 
 	resetTime = ofGetElapsedTimef() + resetPeriod;
 	colorTime = ofGetElapsedTimef() + colorPeriod;
+	sceneTime = ofGetElapsedTimef() + scenePeriod;
 
 	scene = SLOW_PARTICLES;
 }
@@ -90,16 +92,29 @@ void ofApp::update(){
 	t = ofGetElapsedTimef();
 	f = ofGetFrameNum();
 
-	if (t >= resetTime)
-	{
-		resetTime = t + (resetPeriod * ofRandom(0.9, 1.1));
-		resetParticles();
-	}
+	//if (t >= resetTime)
+	//{
+	//	resetTime = t + (resetPeriod * ofRandom(0.9, 1.1));
+	//	resetParticles();
+	//}
 	if (t >= colorTime)
 	{
 		colorTime = t + (colorPeriod * ofRandom(0.9, 1.1));
 		resetTime = t + (resetPeriod * ofRandom(0.9, 1.1));
 		resetColors();
+		resetParticles();
+	}
+	if (t >= sceneTime)
+	{
+		if (scene == NOISE_PARTICLES)
+			scene = SLOW_PARTICLES;
+		else
+			scene = NOISE_PARTICLES;
+
+		sceneTime = t + (scenePeriod * ofRandom(0.9, 1.1));
+		colorTime = t + (colorPeriod * ofRandom(0.9, 1.1));
+
+		resetParticles();
 	}
 
 	//*********************************

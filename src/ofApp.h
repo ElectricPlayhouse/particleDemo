@@ -81,8 +81,8 @@ public:
 	//	Space particles
 	//*********************************
 	SP_Particles sp_particles;
-	const int sp_x_dim = 2000;
-	const int sp_y_dim = 2000;
+	const int sp_x_dim = 750;
+	const int sp_y_dim = 750;
 
 	//*********************************
 	//	Colors
@@ -102,8 +102,8 @@ public:
 	//*********************************
 	//	Scene
 	//*********************************
-	float resetTime, colorTime;
-	float resetPeriod, colorPeriod;
+	float resetTime, colorTime, sceneTime;
+	float resetPeriod, colorPeriod, scenePeriod;
 
 	typedef enum
 	{
